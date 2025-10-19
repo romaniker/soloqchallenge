@@ -1,3 +1,6 @@
+import Image from "next/image";
+import type { ReactNode } from "react";
+
 "use client";
 
 import useSWR from "swr";
@@ -79,7 +82,7 @@ export default function Page() {
   );
 }
 
-function Th({ children, className = "" }: { children: any; className?: string }) {
+function Th({ children, className = "" }: { children: ReactNode; className?: string }) {
   return <th className={`px-4 py-3 font-medium uppercase tracking-wide text-xs ${className}`}>{children}</th>;
 }
 
@@ -91,7 +94,13 @@ function Row({ p }: { p: Player }) {
 
       <td className="px-4 py-3">
         <div className="flex items-center gap-3">
-          <img src={p.avatarUrl} alt={p.gameName} className="h-9 w-9 rounded-full object-cover" />
+          <Image
+              src={p.avatarUrl}
+              alt={p.gameName}
+              width={36}
+              height={36}
+              className="h-9 w-9 rounded-full object-cover"
+            />
           <div className="leading-tight">
             <div className="font-semibold">{p.gameName}</div>
           </div>
