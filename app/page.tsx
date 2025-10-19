@@ -1,10 +1,9 @@
-import Image from "next/image";
-import type { ReactNode } from "react";
-
 "use client";
 
+import Image from "next/image";
 import useSWR from "swr";
 import { useMemo } from "react";
+import type { ReactNode } from "react";
 
 type Player = {
   id: string;
