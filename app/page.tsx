@@ -1,103 +1,126 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import useSWR from "swr";
+import { useMemo } from "react";
+
+type Player = {
+  id: string;
+  rank: number;
+  avatarUrl: string;
+  gameName: string;
+  tagLine?: string;
+  tier: string;
+  lp: number;
+  games: number;
+  wins: number;
+  losses: number;
+  opggUrl?: string;
+};
+
+const fetcher = async (url: string) => {
+  const res = await fetch(url);
+  const data = await res.json();
+  if (!Array.isArray(data)) throw new Error("La API no devolvió una lista");
+  return data as Player[];
+};
+
+export default function Page() {
+  const { data, error, isLoading } = useSWR<Player[]>("/api/leaderboard", fetcher, {
+    refreshInterval: 20000,
+    revalidateOnFocus: true,
+  });
+
+  const rows = useMemo(
+    () => (Array.isArray(data) ? [...data].sort((a, b) => a.rank - b.rank) : []),
+    [data]
+  );
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <main className="min-h-screen bg-neutral-950 text-neutral-100">
+      <div className="max-w-6xl mx-auto px-4 py-8">
+        <h1 className="text-2xl md:text-3xl font-bold mb-6">Leaderboard LoL</h1>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+        <div className="overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-900/50 shadow-2xl">
+          <table className="w-full text-sm md:text-base">
+            <thead className="bg-neutral-900/70 text-neutral-400">
+              <tr>
+                <Th className="w-10 text-center">#</Th>
+                <Th>Jugador</Th>
+                <Th>Cuenta</Th>
+                <Th>Rango</Th>
+                <Th className="hidden md:table-cell text-right">Partidas</Th>
+                <Th className="text-right">W</Th>
+                <Th className="text-right">L</Th>
+                <Th className="text-right">WR</Th>
+                <Th className="text-right">OP.GG</Th>
+              </tr>
+            </thead>
+            <tbody>
+              {isLoading && (
+                <tr>
+                  <td colSpan={9} className="p-6 text-center text-neutral-400">Cargando…</td>
+                </tr>
+              )}
+
+              {error && !isLoading && (
+                <tr>
+                  <td colSpan={9} className="p-6 text-center text-rose-400">
+                    Error: {String(error.message)}
+                  </td>
+                </tr>
+              )}
+
+              {!isLoading && !error && rows.map((p) => <Row key={p.id} p={p} />)}
+            </tbody>
+          </table>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+      </div>
+    </main>
+  );
+}
+
+function Th({ children, className = "" }: { children: any; className?: string }) {
+  return <th className={`px-4 py-3 font-medium uppercase tracking-wide text-xs ${className}`}>{children}</th>;
+}
+
+function Row({ p }: { p: Player }) {
+  const wr = p.games ? Math.round((p.wins / p.games) * 100) : 0;
+  return (
+    <tr className="border-t border-neutral-800 hover:bg-neutral-900/60 transition-colors">
+      <td className="px-4 py-3 text-center text-neutral-400">{p.rank}</td>
+
+      <td className="px-4 py-3">
+        <div className="flex items-center gap-3">
+          <img src={p.avatarUrl} alt={p.gameName} className="h-9 w-9 rounded-full object-cover" />
+          <div className="leading-tight">
+            <div className="font-semibold">{p.gameName}</div>
+          </div>
+        </div>
+      </td>
+
+      <td className="px-4 py-3 text-neutral-300">
+        {p.tagLine ? `${p.gameName}#${p.tagLine}` : "—"}
+      </td>
+
+      <td className="px-4 py-3">
+        <div className="flex items-center gap-2">
+          <span className="inline-flex items-center rounded-md border px-2 py-0.5 text-xs bg-neutral-700/50 text-neutral-300 border-neutral-600">●</span>
+          <span className="text-neutral-200">{p.tier}</span>
+          <span className="text-neutral-400">({p.lp} LP)</span>
+        </div>
+      </td>
+
+      <td className="px-4 py-3 text-right hidden md:table-cell">{p.games}</td>
+      <td className="px-4 py-3 text-right text-emerald-400 font-semibold">{p.wins}</td>
+      <td className="px-4 py-3 text-right text-rose-400 font-semibold">{p.losses}</td>
+      <td className="px-4 py-3 text-right">{wr}%</td>
+      <td className="px-4 py-3 text-right">
+        {p.opggUrl ? (
+          <a className="text-indigo-400 hover:text-indigo-300 underline underline-offset-4" href={p.opggUrl} target="_blank" rel="noreferrer">OP.GG</a>
+        ) : (
+          <span className="text-neutral-500">—</span>
+        )}
+      </td>
+    </tr>
   );
 }
